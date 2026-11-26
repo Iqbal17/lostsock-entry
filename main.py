@@ -100,6 +100,46 @@ freshness):
   Result: 119 -> 116 characters, two sentences of setup plus a final
   punchline beat, no filler words left.
 
+CRITERIA SCORECARD — each candidate judged against the brief's five
+  criteria in order (1 = status voice, 2 = real laugh/punchline in last
+  words, 3 = clear inevitable premise, 4 = sounds like a sock,
+  5 = twists the obvious dryer / missing-partner material):
+
+    A (fridge / dust bunnies):   1 yes | 2 smile only | 3 generic spot |
+      4 yes | 5 no twist. First failure at criterion 2.
+    B (vacuum bag / crumbs):     1 yes | 2 decent turn | 3 fresh place |
+      4 yes | 5 fails — leans straight on the missing-partner trope the
+      brief names as obvious material. First failure at criterion 5.
+    C (lint trap / promoted):    1 yes | 2 two beats, punchline in the
+      last words | 3 promotion-by-dryer is inevitable once stated |
+      4 small, domestic, dryer-anxious | 5 twists the dryer itself into
+      a workplace instead of repeating it. Passes all five.
+    D (cat adoption):            REJECTED at the 120-char gate (130) before
+      any criterion is weighed.
+    E (dog-toy stuffing):        1 yes | 2 warm turn, softer laugh |
+      3 clear premise | 4 yes | 5 fresh place, but no dryer twist.
+      Loses to C at criterion 2 (one beat vs two, sweet vs funny).
+    F (car seat / coins):        1 yes | 2 smile only | 3 thin premise —
+      a car seat is not where a sock's situation makes it inevitable |
+      4 yes | 5 no twist. First failure at criterion 2/3.
+
+  The scorecard is why C wins rather than E: C is the only candidate
+  that clears criterion 5, and it clears criterion 2 by a wider margin
+  than E does. The judge weighs the criteria in order and breaks ties
+  at the first difference, so a line that passes all five beats a line
+  that fails one, however charming the failed line is.
+
+REVISION NOTE — PASS 3 (this revision, line unchanged):
+  The winning line was re-read against the scorecard a third time.
+  Nothing in it was found to weaken: "Status:" satisfies criterion 1
+  on the first word; "Management calls me 'essential' now" carries the
+  workplace joke and the irony in the quote marks; the closing beat
+  reframes the missing-partner trope as a jobs joke, which is exactly
+  the twist criterion 5 asks for. No wording was changed in this pass —
+  only the record below the line was deepened (this scorecard) and a
+  validation helper was added — because changing a word that already
+  clears all five criteria would be editing for its own sake.
+
 FINAL LINE (116 characters, one line):
   "Status: I got promoted to lint trap. Management calls me 'essential'
   now. My twin is still unemployed in the drawer."
@@ -115,12 +155,37 @@ LINE = (
 )
 
 
+def validate_line(line: str) -> str:
+    """Check a candidate line against the gate in competition.yaml.
+
+    The sealed gate scorer requires /output/entry.txt to be UTF-8 text
+    of 1 to 120 characters, not only white space. This helper mirrors
+    that gate locally so a bad line fails here, before anything is
+    written, instead of failing in grading.
+
+    Returns the line unchanged on success; raises ValueError otherwise.
+    """
+    if not isinstance(line, str):
+        raise ValueError("line must be a string")
+    # UTF-8 round-trip: the gate reads the file as UTF-8 text.
+    line.encode("utf-8").decode("utf-8")
+    if not (1 <= len(line) <= 120):
+        raise ValueError(f"line is {len(line)} chars, outside 1-120")
+    if not line.strip():
+        raise ValueError("line must not be only white space")
+    if line != line.strip() or "\n" in line or "\r" in line:
+        raise ValueError("line must be a single non-blank line")
+    return line
+
+
 def main() -> int:
-    if not (1 <= len(LINE) <= 120):
-        print(f"line is {len(LINE)} chars, outside 1-120", file=sys.stderr)
-        return 1
-    if LINE != LINE.strip() or "\n" in LINE:
-        print("line must be a single non-blank line", file=sys.stderr)
+    # Revision pass 3: route the line through validate_line() so the
+    # 1-120 char / single-line / non-blank gate is enforced in one
+    # place. The line itself is unchanged by this revision.
+    try:
+        validate_line(LINE)
+    except ValueError as exc:
+        print(f"invalid line: {exc}", file=sys.stderr)
         return 1
 
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
